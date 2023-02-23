@@ -80,8 +80,8 @@ const head = document.getElementsByTagName('head')[0];
 // LoadJs('https://momentjs.com/downloads/moment-timezone-with-data-1970-2030.min.js');
 
 (async () => {
-    await LoadJs('https://cdn.jsdelivr.net/gh/Spexz/rtx@main/moment.min.js', 5, () => moment !== undefined);
-    await LoadJs('https://cdn.jsdelivr.net/gh/Spexz/rtx@main/moment-timezone-with-data-1970-2030.min.js', 5, () => moment.tz !== undefined);
+    await LoadJs('https://cdn.jsdelivr.net/gh/Spexz/rtx@main/moment.min.js', 5, (function(){ return moment !== undefined }) );
+    await LoadJs('https://cdn.jsdelivr.net/gh/Spexz/rtx@main/moment-timezone-with-data-1970-2030.min.js', 5, (function(){ return moment.tz !== undefined }));
 })();
 
 const style = document.createElement('style');

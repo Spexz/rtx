@@ -100,9 +100,13 @@ head.appendChild(link);
 // LoadJs('https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.31/moment-timezone-with-data-2012-2022.min.js');
 // LoadJs('https://momentjs.com/downloads/moment.min.js');
 // LoadJs('https://momentjs.com/downloads/moment-timezone-with-data-1970-2030.min.js');
-(async () => {
-    await LoadJs('https://cdn.jsdelivr.net/gh/Spexz/rtx@main/moment.min.js', 5, (function(){ return moment !== undefined }) );
-    await LoadJs('https://cdn.jsdelivr.net/gh/Spexz/rtx@main/moment-timezone-with-data-1970-2030.min.js', 5, (function(){ return moment.tz !== undefined }));
+(async function(){
+    await LoadJs('https://cdn.jsdelivr.net/gh/Spexz/rtx@main/moment.min.js', 5, (function(){
+        return function () {return moment !== undefined}
+    }) );
+    await LoadJs('https://cdn.jsdelivr.net/gh/Spexz/rtx@main/moment-timezone-with-data-1970-2030.min.js', 5, (function(){
+        return function () {return moment.tz !== undefined}
+    }));
 })();
 
 const MASTER_PAYGROUP = {};

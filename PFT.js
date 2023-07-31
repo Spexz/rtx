@@ -100,14 +100,19 @@ head.appendChild(link);
 // LoadJs('https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.31/moment-timezone-with-data-2012-2022.min.js');
 // LoadJs('https://momentjs.com/downloads/moment.min.js');
 // LoadJs('https://momentjs.com/downloads/moment-timezone-with-data-1970-2030.min.js');
-(async function(){
-    await LoadJs('https://cdn.jsdelivr.net/gh/Spexz/rtx@main/moment.min.js', 5, (function(){
-        return function () {return moment !== undefined}
-    }) );
-    await LoadJs('https://cdn.jsdelivr.net/gh/Spexz/rtx@main/moment-timezone-with-data-1970-2030.min.js', 5, (function(){
-        return function () {return moment.tz !== undefined}
-    }));
-})();
+// (async function(){
+//     await LoadJs('https://cdn.jsdelivr.net/gh/Spexz/rtx@main/moment.min.js', 5, (function(){
+//         return function () {return moment !== undefined}
+//     }) );
+//     await LoadJs('https://cdn.jsdelivr.net/gh/Spexz/rtx@main/moment-timezone-with-data-1970-2030.min.js', 5, (function(){
+//         return function () {return moment.tz !== undefined}
+//     }));
+// })();
+
+loadScriptsInOrder(['https://cdn.jsdelivr.net/gh/Spexz/rtx@main/moment.min.js', 'https://cdn.jsdelivr.net/gh/Spexz/rtx@main/moment-timezone-with-data-1970-2030.min.js']).then(function() {
+    // All scripts are loaded completely
+    console.log('Moments should be loaded', moment);
+});
 
 const MASTER_PAYGROUP = {};
 
@@ -145,11 +150,12 @@ container.appendChild(button);
 
 document.body.appendChild(container);
 
-button.addEventListener("click", () => {
+button.addEventListener("click", ()=>{
     StartPDScript();
-});
+}
+);
 
-const StartPDScript = () => {
+const StartPDScript = ()=>{
     running = !running;
 
     if (running) {
@@ -243,9 +249,7 @@ const PFTNotif = async()=>{
                 const p = current_pg_status[key];
 
                 // Check if the status has changed on PFT for this group
-                if (p?.PFTAndTransmitStatus == "In Progress" 
-                    && MASTER_PAYGROUP[p.PayGroup]?.PFTAndTransmitStatus != p?.PFTAndTransmitStatus 
-                    && MASTER_PAYGROUP[p.PayGroup]?.Notifications?.PFTAndTransmitStatus === undefined) {
+                if (p?.PFTAndTransmitStatus == "In Progress" && MASTER_PAYGROUP[p.PayGroup]?.PFTAndTransmitStatus != p?.PFTAndTransmitStatus && MASTER_PAYGROUP[p.PayGroup]?.Notifications?.PFTAndTransmitStatus === undefined) {
 
                     showNotification(p.PayGroup + ' is reaady to PFT', 'Please PFT ' + p.PayGroup);
                     sound.play();
@@ -255,15 +259,14 @@ const PFTNotif = async()=>{
                 }
 
                 // Check if the status has changed on ReleaseToNetStatus for this group
-                if (p?.ReleaseToNetStatus == "In Progress" 
-                    && MASTER_PAYGROUP[p.PayGroup]?.ReleaseToNetStatus != p?.ReleaseToNetStatus 
-                    && MASTER_PAYGROUP[p.PayGroup]?.Notifications?.ReleaseToNetStatus === undefined) {
+                if (p?.ReleaseToNetStatus == "In Progress" && MASTER_PAYGROUP[p.PayGroup]?.ReleaseToNetStatus != p?.ReleaseToNetStatus && MASTER_PAYGROUP[p.PayGroup]?.Notifications?.ReleaseToNetStatus === undefined) {
 
                     showNotification(p.PayGroup + ' : Release To Net', 'Please log release to net for ' + p.PayGroup);
                     sound.play();
                     //releaseToNetSpeak(p.PayGroup);
 
-                    MASTER_PAYGROUP[p.PayGroup].Notifications.ReleaseToNetStatus = new Date().getTime();//Date.now();
+                    MASTER_PAYGROUP[p.PayGroup].Notifications.ReleaseToNetStatus = new Date().getTime();
+                    //Date.now();
 
                     // Update sheet with release time
                     if (UPDATE_DRIVING_SHT) {
@@ -277,30 +280,29 @@ const PFTNotif = async()=>{
                     }
                 }
 
-                if (p?.ReleaseToNetStatus == "In Progress") {
-                    console.log(p.PayGroup);
-                    
-                    if(MASTER_PAYGROUP[p.PayGroup]?.Notifications?.ReleaseToNetStatus === undefined) {
-                        MASTER_PAYGROUP[p.PayGroup].Notifications.ReleaseToNetStatus = new Date().getTime();
-                    } else {
-                        let releaseNotifSecondsElapse = 
-                            (new Date().getTime() - MASTER_PAYGROUP[p.PayGroup]?.Notifications?.ReleaseToNetStatus) / 1000;
+                if (SEND_TO_WC)
+                    if (p?.ReleaseToNetStatus == "In Progress") {
+                        console.log(p.PayGroup);
 
-                        if(releaseNotifSecondsElapse > 10) {
-                            console.log(p.PayGroup + ' Release In Progress after last notifications > 10 secs');
-
-                            //TODO: take actions
-                            if (SEND_TO_WC) {
-                                SendPaygroupsToWC([{
-                                    paygroup: p.PayGroup
-                                }]);
-                            }
-
+                        if (MASTER_PAYGROUP[p.PayGroup]?.Notifications?.ReleaseToNetStatus === undefined) {
                             MASTER_PAYGROUP[p.PayGroup].Notifications.ReleaseToNetStatus = new Date().getTime();
+                        } else {
+                            let releaseNotifSecondsElapse = (new Date().getTime() - MASTER_PAYGROUP[p.PayGroup]?.Notifications?.ReleaseToNetStatus) / 1000;
+
+                            if (releaseNotifSecondsElapse > 10) {
+                                console.log(p.PayGroup + ' Release In Progress after last notifications > 10 secs');
+
+                                //TODO: take actions
+                                if (SEND_TO_WC) {
+                                    SendPaygroupsToWC([{
+                                        paygroup: p.PayGroup
+                                    }]);
+                                }
+
+                                MASTER_PAYGROUP[p.PayGroup].Notifications.ReleaseToNetStatus = new Date().getTime();
+                            }
                         }
                     }
-                }
-                
 
                 MASTER_PAYGROUP[p.PayGroup] = {
                     ...MASTER_PAYGROUP[p.PayGroup],
@@ -335,7 +337,8 @@ const PFTNotif = async()=>{
                     postData('https://prod-91.westus.logic.azure.com:443/workflows/038eef7168cd47fd8eb47e255972340b/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=su87OzNGxl5B-Xwdrt06LARJvfz2AQQaVGRnfB7mweY', payload).then((data)=>{
                         console.log(data);
                         // JSON data parsed by `data.json()` call
-                    });
+                    }
+                    );
                 }
 
             }
@@ -385,7 +388,7 @@ const PFTNotif = async()=>{
 
             status_side.innerHTML = side_body;
 
-            if(global.gc) {
+            if (global.gc) {
                 global.gc();
             }
 
@@ -583,7 +586,7 @@ const PingWC = ()=>{
     }
 }
 
-async function LoadJs(url, tries=5, test = () => true) {
+async function LoadJs(url, tries=5, test=()=>true) {
     let tryCount = 0;
     let result = false;
 
@@ -595,7 +598,7 @@ async function LoadJs(url, tries=5, test = () => true) {
             script.setAttribute('async', false);
 
             script.onload = function() {
-                if(test())
+                if (test())
                     resolve(true);
                 else
                     reject(false);
@@ -654,6 +657,42 @@ async function GetPayGroupStatus() {
     return result;
 }
 
-// localStorage.setItem('UPDATE_DRIVING_SHT', true);
+// Load a script from given `url`
+function loadScript(url) {
+    return new Promise(function(resolve, reject) {
+        const script = document.createElement('script');
+        script.src = url;
+        script.async = false;
+
+        script.addEventListener('load', function() {
+            // The script is loaded completely
+            resolve(true);
+        });
+
+        document.head.appendChild(script);
+    }
+    );
+}
+;// Perform all promises in the order
+function waterfall(promises) {
+    return promises.reduce(function(p, c) {
+        // Waiting for `p` completed
+        return p.then(function() {
+            // and then `c`
+            return c.then(function(result) {
+                return true;
+            });
+        });
+    }, // The initial value passed to the reduce method
+    Promise.resolve([]));
+}
+;// Load an array of scripts in order
+function loadScriptsInOrder(arrayOfJs) {
+    const promises = arrayOfJs.map(function(url) {
+        return loadScript(url);
+    });
+    return waterfall(promises);
+}
+;// localStorage.setItem('UPDATE_DRIVING_SHT', true);
 // localStorage.setItem('SEND_TO_WC', true);
 // StartPDScript();

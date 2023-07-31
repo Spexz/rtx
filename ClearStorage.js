@@ -90,6 +90,3 @@ async function ClearStorage() {
    });
    return result;
 }
-
-
-await ClearStorage();

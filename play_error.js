@@ -38,7 +38,7 @@ const throttleFunction = (func, delay) => {
   }
 }
 
-window.onerror = function() {
+window.onerror = function(errorMsg, url, lineNumber) {
 	throttleFunction(() => {
         console.log("an error occurred");
         errSound.play();
